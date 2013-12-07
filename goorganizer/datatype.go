@@ -2,29 +2,30 @@ package goorganizer
 
 import (
 	"time"
-	"appengine/datastore"
 )
 
 type User struct {
-	Id datastore.Key
+	Id string //id of own key
 	Email string
 	Nickname string
 	Verified bool
 	Password string
+	FollowedThread []string //ids of thread.key
 }
 
 type Thread struct {
-	Id datastore.Key
-	Author User
+	Id string //id of own key
+	Author string //id of key
 	Title string
 	Text string
 	Time time.Time
-	Posts []Post
-	Participant []User
+	Posts []string //ids of Post.key
+	Participant []string //id of User.key
 }
 
 type Post struct {
-    Author User
-    Text string
-    Time time.Time
+	Id string
+	Author string //id of key
+	Text string
+	Time time.Time
 }
