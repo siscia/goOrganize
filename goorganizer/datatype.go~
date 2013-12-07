@@ -1,0 +1,24 @@
+package goorganizer
+
+import "time"
+
+type User struct {
+	Email string
+	Nickname string
+	Verified bool
+	Password string
+}
+
+type Thread struct {
+	Author User
+	Title string
+	Text string
+	Time time.Time
+	Posts []Post
+}
+
+type Post struct {
+    Author User
+    Text string
+    Time time.Time
+}
