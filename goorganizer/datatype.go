@@ -6,7 +6,7 @@ import (
 
 type User struct {
 	Id string //id of own key
-	Email string
+	Email string //id and email are the same...
 	Nickname string
 	Verified bool
 	Password string

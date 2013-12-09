@@ -21,14 +21,14 @@ func GenerateHash(text string, title string, moment time.Time) string{
 func GetUser(c appengine.Context, email string) (User, error){
 	var user User 
 	key := datastore.NewKey(c, "Users", email, 0, nil) 
-	if datastore.Get(c, key, user) == datastore.ErrNoSuchEntity{
-		//panic("Not found email")
-		return CreateUser(email, c)}
+	err := datastore.Get(c, key, user)
+	if err != nil{
+		return CreateUser(c, email)}
 	c.Infof("user.Id: %v", user.Id)
 	return user, nil
 }
 
-func CreateUser(email string, c appengine.Context) (User, error) {
+func CreateUser(c appengine.Context, email string) (User, error) {
 	key := datastore.NewKey(c, "Users", email, 0, nil)
 	id := key.StringID()
 	c.Infof("user create: %v", id)
@@ -47,45 +47,59 @@ func NewThread(c appengine.Context, email string, title string, text string) (Th
 	key := datastore.NewKey(c, "Thread", hash, 0, nil)
 	id := key.StringID()
 	c.Infof("id of thread: %v", id)
-	thread := Thread{Id: id, Title: title, Text: text, Time: time.Now(), Participant: []string{author.Id}}
+	thread := Thread{Id: id, Title: title, Text: text, Time: time.Now(), Participant: []string{author.Id}, Author: author.Id}
 	_, err := datastore.Put(c, key, &thread)
 	if err != nil {
-		panic("Error in Write Thread")}
+		return Thread{}, errors.New("Problem writing in the DataBase")}
 	return thread, nil
 }
 
 func GetThread(c appengine.Context, id string) (Thread, error) {
 	key := datastore.NewKey(c, "Thread", id, 0, nil)
 	var thread Thread
-	if datastore.Get(c, key, thread) == datastore.ErrNoSuchEntity{
+	if datastore.Get(c, key, &thread) == datastore.ErrNoSuchEntity{
+		panic("???")
 		return Thread{}, datastore.ErrNoSuchEntity}
+	c.Infof("thread1: %v", thread)
 	return thread, nil
 }
 
 func GetPost(c appengine.Context, id string) (Post, error) {
 	key := datastore.NewKey(c, "Posts", id, 0, nil)
 	var post Post
-	if datastore.Get(c, key, post) == datastore.ErrNoSuchEntity{
+	if datastore.Get(c, key, &post) == datastore.ErrNoSuchEntity{
 		return Post{}, datastore.ErrNoSuchEntity}
 	return post, nil
 }
 
+func IsAuthUser(thread Thread, user User) bool{
+	for _, participant := range thread.Participant{
+		if participant == user.Email{
+			return true}
+	}
+	return false
+}
+
 func NewPost(c appengine.Context, threadId string, email string, text string) (Thread, error){
+	c.Infof("threadId: %v", threadId)
 	thread, err := GetThread(c, threadId)
+	c.Infof("thread: %v, error: %v", thread, err)
 	if err != nil {
 		return Thread{}, err}
 	user, err := GetUser(c, email)
+	if err != nil {
+		return Thread{}, err}
 	c.Infof("thread.Id: %v user.Id: %v", thread.Id, user.Id)
-	for _, participant := range thread.Participant {
-		if participant == user.Id {
-			id := GenerateHash(email, text, time.Now())
-			key := datastore.NewKey(c, "Posts", id, 0, nil)
-			post := Post{Id: key.StringID(), Author: user.Id, Text: text, Time: time.Now()}
-			_, err := datastore.Put(c, key, post)
-			if err != nil{
-				panic("Error writing Post")}
-			return AddPost(c, thread, post)}}
-	panic("Non AUTH")
+	if IsAuthUser(thread, user){
+		id := GenerateHash(email, text, time.Now())
+		key := datastore.NewKey(c, "Posts", id, 0, nil)
+		post := Post{Id: key.StringID(), Author: user.Id, Text: text, Time: time.Now()}
+		_, err := datastore.Put(c, key, &post)
+		if err != nil{
+			c.Infof("error just below: %v", err)
+			panic("Error writing Post")}
+		return AddPost(c, thread, post)}
+	return Thread{}, errors.New("Non Auth User")
 	//return Thread{}, errors.New("Not Authenticate User")
 }
 
@@ -121,7 +135,7 @@ func ModifyPost(c appengine.Context, thread Thread, index int, text string) (Pos
 		postID := thread.Posts[index]
 		key := datastore.NewKey(c, "Posts", postID, 0, nil)
 		var post Post
-		if datastore.Get(c, key, post) == datastore.ErrNoSuchEntity{
+		if datastore.Get(c, key, &post) == datastore.ErrNoSuchEntity{
 			return Post{}, datastore.ErrNoSuchEntity}
 		post.Text = text
 		return UpdatePost(c, post)
