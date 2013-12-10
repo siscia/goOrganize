@@ -157,8 +157,8 @@ func UpdateUser(c appengine.Context, user User) (User, error){
 }
 
 func UpdateThread(c appengine.Context, thread Thread) (Thread, error){
-	key := datastore.NewKey(c, "Threads", thread.Id, 0, nil)
-	_, err := datastore.Put(c, key, thread)
+	key := datastore.NewKey(c, "Thread", thread.Id, 0, nil)
+	_, err := datastore.Put(c, key, &thread)
 	if err != nil{
 		return Thread{}, err}
 	return thread, nil

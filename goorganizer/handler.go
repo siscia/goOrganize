@@ -3,6 +3,7 @@ package goorganizer
 import (
 	"fmt"
 	"net/http"
+	"html/template"
 	"time"
 	"appengine"
 	"github.com/gorilla/mux"
@@ -23,6 +24,7 @@ func init() {
 	r.HandleFunc("/", Main)
 	http.Handle("/", r)
 }
+
 
 func DebugReq(w http.ResponseWriter, r *http.Request){
 	c := appengine.NewContext(r)
@@ -69,6 +71,21 @@ func NewPostReq(w http.ResponseWriter, r *http.Request){
 
 func ServeReq(w http.ResponseWriter, r *http.Request){
 	fmt.Fprint(w, "Serve Thread Request")
+	c := appengine.NewContext(r)
+	thread, err := GetThread(c, mux.Vars(r)["TH_ID"])
+	if err != nil{
+		c.Infof("get some problem, %v", err)}
+	t := RenderingThread{Thread: thread, EmailAuthor: thread.Author}
+	for _, post := range thread.Posts{
+		u, _ := GetPost(c, post)
+		t.Posts = append(t.Posts, u)}
+	temp, err := template.ParseFiles("/home/simo/goOrganize/goorganizer/templates/Kreative10/thread.mustache.html")
+	if err != nil{
+		c.Infof("Error: %v", err)
+		panic("Parsing template panic")}
+	c.Infof("thread in handler: %v", t)
+	fmt.Fprint(w, t)
+	temp.Execute(w, t)
 }
 
 func DeletePostReq(w http.ResponseWriter, r *http.Request){
@@ -95,7 +112,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, time.Now(), "\n")
 	NewThread(c, "simone@mweb.biz", "prova", "la1la")
 }
-
 
 func Main(w http.ResponseWriter, r *http.Request) {
 	form := mustache.RenderFile("/home/simo/goOrganize/goorganizer/templates/main.mustache.html", nil)

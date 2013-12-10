@@ -13,6 +13,12 @@ type User struct {
 	FollowedThread []string //ids of thread.key
 }
 
+type RenderingThread struct{
+	Thread
+	EmailAuthor string
+	Posts []Post
+}
+
 type Thread struct {
 	Id string //id of own key
 	Author string //id of key
