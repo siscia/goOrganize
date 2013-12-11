@@ -10,6 +10,8 @@ import (
 	"fmt"
 )
 
+// TODO AddParticipant should run in a transaction
+
 func GenerateHash(text string, title string, moment time.Time) string{
 	h := fnv.New64a()
 	t := fmt.Sprintf("%x%x%x", text, title, moment)
@@ -100,11 +102,9 @@ func NewPost(c appengine.Context, threadId string, email string, text string) (T
 			panic("Error writing Post")}
 		return AddPost(c, thread, post)}
 	return Thread{}, errors.New("Non Auth User")
-	//return Thread{}, errors.New("Not Authenticate User")
 }
 
 func AddParticipant(c appengine.Context, thread Thread, user User) (Thread, User) {
-// all this should run in a transaction
 	thread.Participant = append(thread.Participant, user.Id)
 	t, err := UpdateThread(c, thread)
 	if err != nil {
@@ -169,4 +169,5 @@ func UpdatePost(c appengine.Context, post Post) (Post, error){
 	_, err := datastore.Put(c, key, post)
 	if err != nil {
 		return Post{}, err}
-	return post, nil}
+	return post, nil
+}

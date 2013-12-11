@@ -26,6 +26,8 @@ func init() {
 }
 
 
+// all the error here should redirect to some other page explaining what went wrong and how to recover.
+
 func DebugReq(w http.ResponseWriter, r *http.Request){
 	c := appengine.NewContext(r)
 	r.ParseForm()
@@ -61,16 +63,17 @@ func NewThreadReq(w http.ResponseWriter, r *http.Request){
 func NewPostReq(w http.ResponseWriter, r *http.Request){
 	threadId := mux.Vars(r)["TH_ID"]
 	c := appengine.NewContext(r)
-	p := r.Form
+	r.ParseForm()
+	p := r.PostForm
 	email, text := p.Get("email"), p.Get("text")
+	c.Infof("\n\n\n\nall: %v, email: %v, text: %v", p, email, text)
 	_, err := NewPost(c, threadId, email, text)
 	if err != nil {
-		fmt.Fprint(w, "Get some problem, try again", err)}
+		fmt.Fprint(w, "Get some problem, try again ", err)}
 	fmt.Fprint(w, threadId)
 }
 
 func ServeReq(w http.ResponseWriter, r *http.Request){
-	fmt.Fprint(w, "Serve Thread Request")
 	c := appengine.NewContext(r)
 	thread, err := GetThread(c, mux.Vars(r)["TH_ID"])
 	if err != nil{
@@ -79,12 +82,11 @@ func ServeReq(w http.ResponseWriter, r *http.Request){
 	for _, post := range thread.Posts{
 		u, _ := GetPost(c, post)
 		t.Posts = append(t.Posts, u)}
-	temp, err := template.ParseFiles("/home/simo/goOrganize/goorganizer/templates/Kreative10/thread.mustache.html")
+	temp, err := template.ParseFiles("/home/simo/goOrganize/goorganizer/templates/Kreative10/thread2.html")
 	if err != nil{
 		c.Infof("Error: %v", err)
 		panic("Parsing template panic")}
 	c.Infof("thread in handler: %v", t)
-	fmt.Fprint(w, t)
 	temp.Execute(w, t)
 }
 
@@ -94,7 +96,17 @@ func DeletePostReq(w http.ResponseWriter, r *http.Request){
 
 
 func AddPeopleReq(w http.ResponseWriter, r *http.Request){
-	fmt.Fprint(w, "Add People Request")
+	c := appengine.NewContext(r)
+	thread, err := GetThread(c, mux.Vars(r)["TH_ID"])
+	if err != nil{
+		c.Infof("Error retriving thread x adding people, ", err)}
+	r.ParseForm()
+	user, err := GetUser(c, r.PostForm.Get("email"))
+	if err != nil{
+		c.Infof("Error retriving user x adding people, ", err)
+	}
+	thread, user = AddParticipant(c, thread, user)
+	fmt.Fprint(w, "%v added at the %v, now s/he can post", user, thread)
 }
 
 

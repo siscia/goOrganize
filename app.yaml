@@ -4,5 +4,16 @@ runtime: go
 api_version: go1
 
 handlers:
+- url: /css
+  static_dir: goorganizer/templates/Kreative10/css
+
+- url: /js
+  static_dir: goorganizer/templates/Kreative10/js
+
+- url: /images
+  static_dir: goorganizer/templates/Kreative10/images
+
 - url: /.*
   script: _go_app
+
+
