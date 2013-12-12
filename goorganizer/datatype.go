@@ -16,12 +16,14 @@ type User struct {
 type RenderingThread struct{
 	Thread
 	EmailAuthor string
+	ObfuscedId string
 	Posts []RenderPost
 	Html interface{}
 }
 
 type Thread struct {
 	Id string //id of own key
+	ObfuscedId string
 	Author string //id of key
 	Title string
 	Text string

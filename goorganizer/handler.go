@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"time"
 	"appengine"
+	"appengine/datastore"
 	"github.com/gorilla/mux"
 	"github.com/hoisie/mustache"
 )
@@ -49,12 +50,14 @@ func DebugReq(w http.ResponseWriter, r *http.Request){
 func ShowThread(w http.ResponseWriter, r *http.Request, thId string){
 	c := appengine.NewContext(r)
 	thread, err := GetThread(c, thId)
+	key := datastore.NewKey(c, "Thread", thId, 0, nil)
 	if err != nil{
 		c.Infof("get some problem, %v", err)}
 	t := RenderingThread{Thread: thread, EmailAuthor: thread.Author}
-	t.Html =  RenderThreadText(t.Text)
+	t.Html =  RenderText(t.Text)
 	c.Infof("visualizeing html, %v ", t.Html)
-	t.Posts = RenderPosts(c, thread.Posts)
+	t.Posts, _ = RenderPosts(c, thread.Posts)
+	t.ObfuscedId = key.Encode()
 	temp, err := template.ParseFiles("goorganizer/templates/Kreative10/thread2.html")
 	if err != nil{
 		c.Infof("Error: %v", err)
@@ -71,7 +74,6 @@ func NewThreadReq(w http.ResponseWriter, r *http.Request){
 	t, err := NewThread(c, email, title, text)
 	if err != nil{
 		fmt.Fprint(w, "Get some problem, try again", err)}
-	//fmt.Fprint(w, email, title, text)
 	ShowThread(w, r, t.Id)
 }
 
@@ -86,25 +88,10 @@ func NewPostReq(w http.ResponseWriter, r *http.Request){
 	if err != nil {
 		fmt.Fprint(w, "Get some problem, try again ", err)}
 	ShowThread(w, r, threadId)
-	//fmt.Fprint(w, threadId)
 }
 
 func ServeReq(w http.ResponseWriter, r *http.Request){
-//	c := appengine.NewContext(r)
-//	thread, err := GetThread(c, mux.Vars(r)["TH_ID"])
-//	if err != nil{
-//		c.Infof("get some problem, %v", err)}
-//	t := RenderingThread{Thread: thread, EmailAuthor: thread.Author}
-//	t.Html =  RenderThreadText(t.Text)
-//	c.Infof("visualizeing html, %v ", t.Html)
-//	t.Posts = RenderPosts(c, thread.Posts)
-//	temp, err := template.ParseFiles("goorganizer/templates/Kreative10/thread2.html")
-//	if err != nil{
-//		c.Infof("Error: %v", err)
-//		panic("Parsing template panic")}
-//	c.Infof("thread in handler: %v", t)
 	ShowThread(w, r, mux.Vars(r)["TH_ID"])
-	//temp.Execute(w, t)
 }
 
 func DeletePostReq(w http.ResponseWriter, r *http.Request){
@@ -122,8 +109,8 @@ func AddPeopleReq(w http.ResponseWriter, r *http.Request){
 	if err != nil{
 		c.Infof("Error retriving user x adding people, ", err)
 	}
-	thread, user = AddParticipant(c, thread, user)
-	fmt.Fprint(w, "%v added at the %v, now s/he can post", user, thread)
+	err = AddParticipant(c, thread, user)
+	fmt.Fprint(w, "%v added at the %v, now s/he can post", err)
 }
 
 

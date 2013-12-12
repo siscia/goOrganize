@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--[if lt IE 8 ]><html class="ie ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]><html class="ie ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 8)|!(IE)]><!--><html lang="en"> <!--<![endif]-->
+<head>
+
+
+   <!--- Basic Page Needs
+   ================================================== -->
+	<meta charset="utf-8">
+	<title>gOrge</title>
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+   <!-- Mobile Specific Metas
+  ================================================== -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<!-- CSS
+   ================================================== -->
+   <link rel="stylesheet" href="/css/base.css">
+   <link rel="stylesheet" href="/css/layout.css">
+
+	<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+
+   <!-- Favicons
+	================================================== -->
+	<link rel="shortcut icon" href="favicon.ico" >
+
+
+</head>
+
+<body data-spy="scroll" data-target="#nav-wrap">
+
+    <!-- Contact Section
+   ================================================== -->
+   <section id="contact">
+
+     <div class="post-well">
+       <div class="row section-head"> <!-- Title of thread -->
+         <div class="full">
+            <h1 class="col g-9">{{.Title}}</h1>
+            <p class="col g-3">by {{.EmailAuthor}}</p>
+         </div>
+       </div>
+       <div class="row section-head">
+         <div class="col full">
+            {{.Html}}
+         </div>
+       </div>
+     </div>
+
+
+        {{with .Posts}} <!-- loop of posts -->
+          {{range .}}
+      <div class="post-well">
+        <div class="row">
+          <aside class="">
+            <h2 class="col g-9"> {{.Author}} </h2>
+            <p class="col g-3"> wrote at {{.Time}}</p>  
+          </aside>
+
+        </div>
+        <div class="row">
+          <div class="col full">
+              {{.Html}}
+          </div>
+        </div>
+      </div>
+          {{end}}
+        {{end}}
+
+          <!-- Form Reply Start -->
+
+          <div class="row section-head text-gorge">
+            <h2> Reply: </h2>
+          </div>
+          <div class="row">
+            <form  method="post" action="/new-post/{{.Id}}">
+              <div class="col full">
+                <input name="email" type="email" placeholder="Your email">
+              </div>
+              <div class="col full">
+                <fieldset>
+                  <div>
+                    <textarea name="text" placeholder="Your reply"></textarea>
+                  </div>
+                </fieldset>
+              </div>              
+              <div>
+                <button class="submit">Reply</button>
+                <span id="image-loader">
+                  <img src="/images/loader.gif" alt="" />
+                </span>
+              </div>              
+            </form> 
+          </div>    <!-- Form Reply End -->
+          
+          <div class="row section-head"> <!-- Form to add participant -->
+            <h2>Add people to the conversation: </h2>
+          </div>
+          <div class="row">
+            <form method="post" action="/add-participant/{{.Id}}">
+              <div class="coll ful">
+                <input name="email" type="email" placeholder="New participant email">
+              </div>
+              <div> 
+                <button class="submit">Add participant</button>
+                <span id="image-loader">
+                  <img src="/images/loader.gif" alt="" />
+                </span>
+              </div>
+            </form>
+          </div> <!-- End form to add participant -->
+
+   </section> <!-- Contact Section End-->
+
+   <!-- footer
+   ================================================== -->
+   <footer>
+
+      <div class="row">
+
+         <div class="col g-7">
+            <ul class="copyright">
+               <li>Copyright &copy; 2013 Kreative</li>
+               <li>Design by <a href="http://www.styleshout.com/" title="Styleshout">Styleshout</a></li>
+            </ul>
+         </div>
+
+
+      </div>
+
+   </footer> <!-- Footer End-->
+
+   <!-- Java Script
+   ================================================== -->
+   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+   <script>window.jQuery || document.write('<script src="js/jquery-1.10.2.min.js"><\/script>')</script>
+   <script type="text/javascript" src="/js/jquery-migrate-1.2.1.min.js"></script>
+
+   <script src="/js/scrollspy.js"></script>
+   <script src="/js/jquery.flexslider.js"></script>
+   <script src="/js/jquery.reveal.js"></script>
+   <script src="/js/gmaps.js"></script>
+   <script src="/js/init.js"></script>
+   <script src="/js/smoothscrolling.js"></script>
+
+</body>
+
+</html>

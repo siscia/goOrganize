@@ -18,7 +18,7 @@ func GenerateHash(text string, title string, moment time.Time) string{
 	h := fnv.New64a()
 	t := fmt.Sprintf("%x%x%x", text, title, moment)
 	h.Write([]byte(t))
-	return fmt.Sprintf("%x", int64(h.Sum64()))
+	return fmt.Sprintf("%x", h.Sum64())
 }
 
 
@@ -50,8 +50,9 @@ func NewThread(c appengine.Context, email string, title string, text string) (Th
 	hash := GenerateHash(text, title, time.Now())
 	key := datastore.NewKey(c, "Thread", hash, 0, nil)
 	id := key.StringID()
+	obfusced := key.Encode()
 	c.Infof("id of thread: %v", id)
-	thread := Thread{Id: id, Title: title, Text: text, Time: time.Now(), Participant: []string{author.Id}, Author: author.Id}
+	thread := Thread{Id: id, Title: title, Text: text, Time: time.Now(), Participant: []string{author.Id}, Author: author.Id, ObfuscedId: obfusced}
 	_, err := datastore.Put(c, key, &thread)
 	if err != nil {
 		return Thread{}, errors.New("Problem writing in the DataBase")}
@@ -62,7 +63,7 @@ func GetThread(c appengine.Context, id string) (Thread, error) {
 	key := datastore.NewKey(c, "Thread", id, 0, nil)
 	var thread Thread
 	if datastore.Get(c, key, &thread) == datastore.ErrNoSuchEntity{
-		panic("???")
+		panic("Not found key")
 		return Thread{}, datastore.ErrNoSuchEntity}
 	c.Infof("thread1: %v", thread)
 	return thread, nil
@@ -106,16 +107,25 @@ func NewPost(c appengine.Context, threadId string, email string, text string) (T
 	return Thread{}, errors.New("Non Auth User")
 }
 
-func AddParticipant(c appengine.Context, thread Thread, user User) (Thread, User) {
+
+
+func AddParticipant(c appengine.Context, thread Thread, user User) error {
 	thread.Participant = append(thread.Participant, user.Id)
-	t, err := UpdateThread(c, thread)
-	if err != nil {
-		panic("Error in adding a Participant")}
 	user.FollowedThread = append(user.FollowedThread, thread.Id)
-	u, err := UpdateUser(c, user)
+	err := datastore.RunInTransaction(c, func(tc appengine.Context) error {
+		_, errT := UpdateThread(tc, thread)			   
+		if errT != nil {						   
+			panic("Error in adding a Participant")
+			return errT}		    
+		_, errU := UpdateUser(tc, user)
+		if errU != nil{
+			panic("Error in adding a Conversation to the followed")
+			return errU}
+		return nil
+	}, nil)
 	if err != nil{
-		panic("Error in adding a Conversation to the followed")}
-	return t, u
+		panic("Error in transaction")}
+	return nil
 }
 
 func AddPost(c appengine.Context, thread Thread, post Post) (Thread, error){
@@ -174,17 +184,18 @@ func UpdatePost(c appengine.Context, post Post) (Post, error){
 	return post, nil
 }
 
-func RenderPosts(c appengine.Context, postIds []string) []RenderPost{
+func RenderPosts(c appengine.Context, postIds []string) ([]RenderPost, error){
 	np := make([]RenderPost, len(postIds))
 	for i, p := range postIds{
-		post, _ := GetPost(c, p)
+		post, err := GetPost(c, p)
+		if err != nil{
+			return np, err}
 		np[i] = RenderPost{Post: post}
-		html := string(blackfriday.MarkdownCommon([]byte(post.Text)))
-		np[i].Html = template.HTML(html)}
-	return np
+		np[i].Html = RenderText(post.Text)}
+	return np, nil
 }
 
-func RenderThreadText(text string) interface{} {
+func RenderText(text string) interface{} {
 	html := string(blackfriday.MarkdownCommon([]byte(text)))
 	return template.HTML(html)
 }
