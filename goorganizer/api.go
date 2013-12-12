@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"hash/fnv"
 	"fmt"
+	"github.com/russross/blackfriday"
+	"html/template"
 )
 
 // TODO AddParticipant should run in a transaction
@@ -150,7 +152,7 @@ func JsonThread(thread Thread) ([]byte, error){
 
 func UpdateUser(c appengine.Context, user User) (User, error){
 	key := datastore.NewKey(c, "Users", user.Id, 0, nil)
-	_, err := datastore.Put(c, key, user)
+	_, err := datastore.Put(c, key, &user)
 	if err != nil {
 		return User{}, err}
 	return user, nil
@@ -166,8 +168,23 @@ func UpdateThread(c appengine.Context, thread Thread) (Thread, error){
 
 func UpdatePost(c appengine.Context, post Post) (Post, error){
 	key := datastore.NewKey(c, "Posts", post.Id, 0, nil)
-	_, err := datastore.Put(c, key, post)
+	_, err := datastore.Put(c, key, &post)
 	if err != nil {
 		return Post{}, err}
 	return post, nil
+}
+
+func RenderPosts(c appengine.Context, postIds []string) []RenderPost{
+	np := make([]RenderPost, len(postIds))
+	for i, p := range postIds{
+		post, _ := GetPost(c, p)
+		np[i] = RenderPost{Post: post}
+		html := string(blackfriday.MarkdownCommon([]byte(post.Text)))
+		np[i].Html = template.HTML(html)}
+	return np
+}
+
+func RenderThreadText(text string) interface{} {
+	html := string(blackfriday.MarkdownCommon([]byte(text)))
+	return template.HTML(html)
 }

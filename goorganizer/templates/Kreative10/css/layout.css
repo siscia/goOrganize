@@ -624,6 +624,29 @@ ul#nav li.active a { color: #11ABB0; }
    color: #707B89;
 }
 
+/* simone added */
+
+#contact h1 {color: #11ABB0;}
+#contact h2 {color: #11ABB0;}
+#contact h3 {color: #11ABB0;}
+#contact h4 {color: #11ABB0;}
+#contact h5 {color: #11ABB0;}
+#contact h6 {color: #11ABB0;}
+
+#contact .post-well { -webkit-box-shadow: 0 10px 6px -6px #2D4A69;
+		      -moz-box-shadow: 0 10px 6px -6px #2D4A69;
+	              box-shadow: 0 10px 6px -6px #2D4A69;
+		      width:70%;
+		      
+		      /*height:200px;*/
+		      background-color: #29334A;
+		      margin:40px auto;
+                      -webkit-border-radius: 15px;
+		      -moz-border-radius: 15px;
+		      border-radius: 15px;}
+
+/* end simone*/
+
 #contact a, #contact a:visited  { color: #C4C4C4; }
 #contact a:hover, #contact a:focus { color: #11ABB0; }
 

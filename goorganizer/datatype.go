@@ -16,7 +16,8 @@ type User struct {
 type RenderingThread struct{
 	Thread
 	EmailAuthor string
-	Posts []Post
+	Posts []RenderPost
+	Html interface{}
 }
 
 type Thread struct {
@@ -34,4 +35,9 @@ type Post struct {
 	Author string //id of key
 	Text string
 	Time time.Time
+}
+
+type RenderPost struct{
+	Post
+	Html interface{}
 }

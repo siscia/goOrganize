@@ -18,7 +18,7 @@ func init() {
 	r.HandleFunc("/new-post/{TH_ID}", NewPostReq)
 	r.HandleFunc("/serve/{TH_ID}", ServeReq)
 	r.HandleFunc("/delete-post/{TH_ID}", DeletePostReq)
-	r.HandleFunc("/add-people/{TH_ID}", AddPeopleReq)
+	r.HandleFunc("/add-participant/{TH_ID}", AddPeopleReq)
 	r.HandleFunc("/modify-post/{TH_ID}", ModifyPostReq)
 	r.HandleFunc("/get-json/{TH_ID}", GetJsonReq)
 	r.HandleFunc("/", Main)
@@ -46,18 +46,33 @@ func DebugReq(w http.ResponseWriter, r *http.Request){
 			r.PostForm.Get("text"))}
 }
 
-func ShowThread(w http.ResponseWriter, r *http.Request){
-	
+func ShowThread(w http.ResponseWriter, r *http.Request, thId string){
+	c := appengine.NewContext(r)
+	thread, err := GetThread(c, thId)
+	if err != nil{
+		c.Infof("get some problem, %v", err)}
+	t := RenderingThread{Thread: thread, EmailAuthor: thread.Author}
+	t.Html =  RenderThreadText(t.Text)
+	c.Infof("visualizeing html, %v ", t.Html)
+	t.Posts = RenderPosts(c, thread.Posts)
+	temp, err := template.ParseFiles("goorganizer/templates/Kreative10/thread2.html")
+	if err != nil{
+		c.Infof("Error: %v", err)
+		panic("Parsing template panic")}
+	c.Infof("thread in handler: %v", t)
+	temp.Execute(w, t)
 }
 
 func NewThreadReq(w http.ResponseWriter, r *http.Request){
 	c := appengine.NewContext(r)
-	p := r.Form
+	r.ParseForm()
+	p := r.PostForm
 	email, title, text := p.Get("email"), p.Get("title"), p.Get("text")
-	_, err := NewThread(c, email, title, text)
+	t, err := NewThread(c, email, title, text)
 	if err != nil{
 		fmt.Fprint(w, "Get some problem, try again", err)}
-	fmt.Fprint(w, email, title, text)
+	//fmt.Fprint(w, email, title, text)
+	ShowThread(w, r, t.Id)
 }
 
 func NewPostReq(w http.ResponseWriter, r *http.Request){
@@ -70,24 +85,26 @@ func NewPostReq(w http.ResponseWriter, r *http.Request){
 	_, err := NewPost(c, threadId, email, text)
 	if err != nil {
 		fmt.Fprint(w, "Get some problem, try again ", err)}
-	fmt.Fprint(w, threadId)
+	ShowThread(w, r, threadId)
+	//fmt.Fprint(w, threadId)
 }
 
 func ServeReq(w http.ResponseWriter, r *http.Request){
-	c := appengine.NewContext(r)
-	thread, err := GetThread(c, mux.Vars(r)["TH_ID"])
-	if err != nil{
-		c.Infof("get some problem, %v", err)}
-	t := RenderingThread{Thread: thread, EmailAuthor: thread.Author}
-	for _, post := range thread.Posts{
-		u, _ := GetPost(c, post)
-		t.Posts = append(t.Posts, u)}
-	temp, err := template.ParseFiles("/home/simo/goOrganize/goorganizer/templates/Kreative10/thread2.html")
-	if err != nil{
-		c.Infof("Error: %v", err)
-		panic("Parsing template panic")}
-	c.Infof("thread in handler: %v", t)
-	temp.Execute(w, t)
+//	c := appengine.NewContext(r)
+//	thread, err := GetThread(c, mux.Vars(r)["TH_ID"])
+//	if err != nil{
+//		c.Infof("get some problem, %v", err)}
+//	t := RenderingThread{Thread: thread, EmailAuthor: thread.Author}
+//	t.Html =  RenderThreadText(t.Text)
+//	c.Infof("visualizeing html, %v ", t.Html)
+//	t.Posts = RenderPosts(c, thread.Posts)
+//	temp, err := template.ParseFiles("goorganizer/templates/Kreative10/thread2.html")
+//	if err != nil{
+//		c.Infof("Error: %v", err)
+//		panic("Parsing template panic")}
+//	c.Infof("thread in handler: %v", t)
+	ShowThread(w, r, mux.Vars(r)["TH_ID"])
+	//temp.Execute(w, t)
 }
 
 func DeletePostReq(w http.ResponseWriter, r *http.Request){
@@ -126,6 +143,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Main(w http.ResponseWriter, r *http.Request) {
-	form := mustache.RenderFile("/home/simo/goOrganize/goorganizer/templates/main.mustache.html", nil)
+	form := mustache.RenderFile("goorganizer/templates/Kreative10/index1.html", nil)
 	fmt.Fprint(w, form)
 }
