@@ -26,7 +26,8 @@ type Thread struct {
 	ObfuscedId string
 	Author string //id of key
 	Title string
-	Text string
+	//Text string
+	Text []byte
 	Time time.Time
 	Posts []string //ids of Post.key
 	Participant []string //id of User.key
@@ -35,7 +36,8 @@ type Thread struct {
 type Post struct {
 	Id string
 	Author string //id of key
-	Text string
+	//Text string
+	Text []byte
 	Time time.Time
 }
 

@@ -27,7 +27,7 @@
 
    <!-- Favicons
 	================================================== -->
-	<link rel="shortcut icon" href="favicon.ico" >
+	<link rel="shortcut icon" href="images/favicon.ico" >
 
 
 </head>
@@ -41,8 +41,8 @@
      <div class="post-well">
        <div class="row section-head"> <!-- Title of thread -->
          <div class="full">
-            <h1 class="col g-9">{{.Title}}</h1>
-            <p class="col g-3">by {{.EmailAuthor}}</p>
+            <h1 class="col g-9">{{.Thread.Title}}</h1>
+            <p class="col g-3">by {{.EmailAuthor}} at {{.Thread.Time}}</p>
          </div>
        </div>
        <div class="row section-head">
@@ -53,8 +53,8 @@
      </div>
 
 
-        {{with .Posts}} <!-- loop of posts -->
-          {{range .}}
+   {{with .Posts}} <!-- loop of posts -->
+     {{range .}}
       <div class="post-well">
         <div class="row">
           <aside class="">
@@ -69,8 +69,8 @@
           </div>
         </div>
       </div>
-          {{end}}
-        {{end}}
+     {{end}}
+   {{end}}
 
           <!-- Form Reply Start -->
 
@@ -78,7 +78,7 @@
             <h2> Reply: </h2>
           </div>
           <div class="row">
-            <form  method="post" action="/new-post/{{.Id}}">
+            <form  method="post" action="/new-post/{{.Thread.Id}}">
               <div class="col full">
                 <input name="email" type="email" placeholder="Your email">
               </div>
@@ -99,10 +99,11 @@
           </div>    <!-- Form Reply End -->
           
           <div class="row section-head"> <!-- Form to add participant -->
+            <!-- 
             <h2>Add people to the conversation: </h2>
           </div>
           <div class="row">
-            <form method="post" action="/add-participant/{{.Id}}">
+            <form method="post" action="/add-participant/{{.Thread.Id}}">
               <div class="coll ful">
                 <input name="email" type="email" placeholder="New participant email">
               </div>
@@ -113,8 +114,7 @@
                 </span>
               </div>
             </form>
-          </div> <!-- End form to add participant -->
-
+          </div> --> <!-- End form to add participant -->
    </section> <!-- Contact Section End-->
 
    <!-- footer
@@ -126,7 +126,7 @@
          <div class="col g-7">
             <ul class="copyright">
                <li>Copyright &copy; 2013 Kreative</li>
-               <li>Design by <a href="http://www.styleshout.com/" title="Styleshout">Styleshout</a></li>
+               <li>Design by <a target="_blank" href="http://www.styleshout.com/" title="Styleshout">Styleshout</a></li>
             </ul>
          </div>
 

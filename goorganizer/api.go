@@ -52,10 +52,12 @@ func NewThread(c appengine.Context, email string, title string, text string) (Th
 	id := key.StringID()
 	obfusced := key.Encode()
 	c.Infof("id of thread: %v", id)
-	thread := Thread{Id: id, Title: title, Text: text, Time: time.Now(), Participant: []string{author.Id}, Author: author.Id, ObfuscedId: obfusced}
+	textb := []byte(text)
+	thread := Thread{Id: id, Title: title, Text: textb, Time: time.Now(), Participant: []string{author.Id}, Author: author.Id, ObfuscedId: obfusced}
 	_, err := datastore.Put(c, key, &thread)
 	if err != nil {
-		return Thread{}, errors.New("Problem writing in the DataBase")}
+		return Thread{}, err
+}
 	return thread, nil
 }
 
@@ -78,6 +80,8 @@ func GetPost(c appengine.Context, id string) (Post, error) {
 }
 
 func IsAuthUser(thread Thread, user User) bool{
+	return true
+	//*** this is why it doesn't works ****
 	for _, participant := range thread.Participant{
 		if participant == user.Email{
 			return true}
@@ -98,6 +102,7 @@ func NewPost(c appengine.Context, threadId string, email string, text string) (T
 	if IsAuthUser(thread, user){
 		id := GenerateHash(email, text, time.Now())
 		key := datastore.NewKey(c, "Posts", id, 0, nil)
+		text := []byte(text)
 		post := Post{Id: key.StringID(), Author: user.Id, Text: text, Time: time.Now()}
 		_, err := datastore.Put(c, key, &post)
 		if err != nil{
@@ -149,7 +154,7 @@ func ModifyPost(c appengine.Context, thread Thread, index int, text string) (Pos
 		var post Post
 		if datastore.Get(c, key, &post) == datastore.ErrNoSuchEntity{
 			return Post{}, datastore.ErrNoSuchEntity}
-		post.Text = text
+		post.Text = []byte(text)
 		return UpdatePost(c, post)
 	}
 	return Post{}, errors.New("Out of Index")}
@@ -195,7 +200,7 @@ func RenderPosts(c appengine.Context, postIds []string) ([]RenderPost, error){
 	return np, nil
 }
 
-func RenderText(text string) interface{} {
-	html := string(blackfriday.MarkdownCommon([]byte(text)))
+func RenderText(text []byte) interface{} {
+	html := string(blackfriday.MarkdownCommon(text))
 	return template.HTML(html)
 }

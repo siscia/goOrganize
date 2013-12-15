@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"time"
 	"appengine"
-	"appengine/datastore"
+//	"appengine/datastore"
 	"github.com/gorilla/mux"
 	"github.com/hoisie/mustache"
 )
@@ -22,12 +22,29 @@ func init() {
 	r.HandleFunc("/add-participant/{TH_ID}", AddPeopleReq)
 	r.HandleFunc("/modify-post/{TH_ID}", ModifyPostReq)
 	r.HandleFunc("/get-json/{TH_ID}", GetJsonReq)
+	r.HandleFunc("/show-to-the-world", ShowToTheWorld)
 	r.HandleFunc("/", Main)
 	http.Handle("/", r)
 }
 
 
 // all the error here should redirect to some other page explaining what went wrong and how to recover.
+
+func ShowToTheWorld(w http.ResponseWriter, r *http.Request){
+	c := appengine.NewContext(r)
+	m := make(map[interface{}]interface{})
+	thread, err := GetThread(c, "c69c3e555f3bb4bb")
+	if err != nil{
+		c.Infof("get some problem, %v", err)}
+	m["Thread"] = thread
+	m["EmailAuthor"] = thread.Author
+	m["Html"] = RenderText(thread.Text)
+	m["Posts"], _ = RenderPosts(c, thread.Posts)
+	temp, err := template.ParseFiles("goorganizer/templates/Kreative10/show-to-the-world.html")
+	if err != nil{
+		c.Infof("Error: %v, %v", err, m)
+		panic("Parsing template panic")}
+	temp.Execute(w, m)}
 
 func DebugReq(w http.ResponseWriter, r *http.Request){
 	c := appengine.NewContext(r)
@@ -49,21 +66,20 @@ func DebugReq(w http.ResponseWriter, r *http.Request){
 
 func ShowThread(w http.ResponseWriter, r *http.Request, thId string){
 	c := appengine.NewContext(r)
+	m := make(map[interface{}]interface{})
 	thread, err := GetThread(c, thId)
-	key := datastore.NewKey(c, "Thread", thId, 0, nil)
+	//key := datastore.NewKey(c, "Thread", thId, 0, nil)
 	if err != nil{
 		c.Infof("get some problem, %v", err)}
-	t := RenderingThread{Thread: thread, EmailAuthor: thread.Author}
-	t.Html =  RenderText(t.Text)
-	c.Infof("visualizeing html, %v ", t.Html)
-	t.Posts, _ = RenderPosts(c, thread.Posts)
-	t.ObfuscedId = key.Encode()
+	m["Thread"] = thread
+	m["EmailAuthor"] = thread.Author
+	m["Html"] = RenderText(thread.Text)
+	m["Posts"], _ = RenderPosts(c, thread.Posts)
 	temp, err := template.ParseFiles("goorganizer/templates/Kreative10/thread2.html")
 	if err != nil{
-		c.Infof("Error: %v", err)
+		c.Infof("Error: %v, %v", err, m)
 		panic("Parsing template panic")}
-	c.Infof("thread in handler: %v", t)
-	temp.Execute(w, t)
+	temp.Execute(w, m)
 }
 
 func NewThreadReq(w http.ResponseWriter, r *http.Request){
